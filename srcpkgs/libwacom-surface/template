@@ -1,0 +1,44 @@
+# Template file for 'libwacom-surface'
+pkgname=libwacom-surface
+version=1.12
+revision=1
+build_style=meson
+build_helper="qemu"
+conflicts="libwacom"
+wrksrc="libwacom-libwacom-${version}"
+configure_args="-Ddocumentation=disabled -Dexe_wrapper=qemu-${XBPS_TARGET_QEMU_MACHINE}-static"
+hostmakedepends="pkg-config"
+makedepends="gtk+-devel libgudev-devel librsvg-devel libxml2-devel"
+checkdepends="python3-pytest python3-libevdev python3-pyudev"
+short_desc="Library to identify wacom tablets with patches for Microsoft Surface devices"
+maintainer="Tino Heuberger <tinoheuberger@protonmail.com>"
+license="MIT"
+homepage="https://github.com/linux-surface/libwacom-surface"
+changelog="https://raw.githubusercontent.com/linuxwacom/libwacom/master/NEWS"
+distfiles="https://github.com/linuxwacom/libwacom/archive/refs/tags/libwacom-${version}.tar.gz
+ https://github.com/linux-surface/libwacom-surface/archive/refs/tags/v${version}-1.tar.gz"
+checksum="8c7daaac84c1842dee5be71e18c09d0ba1a4f4f511d815d7a9827d66fccd1389
+ 6fae48c38aa085551c1f389913514d38353d10a1bbce6c1619a4aad66f5d519c"
+
+if [ -z "${XBPS_CHECK_PKGS}" ]; then
+	configure_args+=" -Dtests=disabled"
+fi
+
+pre_patch() {
+    # Apply libwacom-surface patches
+    for i in ../libwacom-surface-${version}-1/*.patch; do patch -Np1 < $i; done
+}
+
+post_install() {
+	vlicense COPYING
+}
+
+libwacom-surface-devel_package() {
+	depends="libgudev-devel ${sourcepkg}>=${version}_${revision}"
+	short_desc+=" - development files"
+	pkg_install() {
+		vmove usr/include
+		vmove usr/lib/pkgconfig
+		vmove "usr/lib/*.so"
+	}
+}
